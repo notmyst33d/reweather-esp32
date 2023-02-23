@@ -33,21 +33,21 @@ fn main() -> std::io::Result<()> {
             "port" => {
                 port = Some(match data[1].parse() {
                     Ok(result) => result,
-                    Err(error) => panic!("PANIC! Cannot parse \"{}\": {error}", data[0]),
+                    Err(error) => panic!("Cannot parse \"{}\": {error}", data[0]),
                 })
             }
-            &_ => panic!("PANIC! Unknown field \"{}\"", data[0]),
+            &_ => panic!("Unknown field \"{}\"", data[0]),
         };
     }
 
     if ssid.is_none() || psk.is_none() || port.is_none() {
-        panic!("PANIC! config.txt doesnt have \"ssid\", \"psk\" or \"port\" fields");
+        panic!("config.txt doesnt have \"ssid\", \"psk\" or \"port\" fields");
     }
 
     println!("Initializing Peripherals");
     let peripherals = match Peripherals::take() {
         Some(peripherals) => peripherals,
-        None => panic!("PANIC! Cannot create Peripherals instance"),
+        None => panic!("Cannot create Peripherals instance"),
     };
 
     println!("Initializing I2cDriver");
@@ -58,13 +58,13 @@ fn main() -> std::io::Result<()> {
         &i2c::config::Config::default(),
     ) {
         Ok(result) => result,
-        Err(error) => panic!("PANIC! Cannot create I2cDriver instance: {error}"),
+        Err(error) => panic!("Cannot create I2cDriver instance: {error}"),
     };
 
     println!("Initializing BMP280 driver");
     let sensor = match bmp280::BMP280::new(driver, bmp280::Address::Primary) {
         Ok(result) => Arc::new(Mutex::new(result)),
-        Err(error) => panic!("PANIC! Cannot create BMP280 driver instance: {error}"),
+        Err(error) => panic!("Cannot create BMP280 driver instance: {error}"),
     };
 
     println!("Initializing BMP280");
@@ -74,7 +74,7 @@ fn main() -> std::io::Result<()> {
         .set_config(bmp280::Config::Standby4000MS as u8)
     {
         Ok(_) => (),
-        Err(error) => panic!("PANIC! sensor.set_config() failed: {error}"),
+        Err(error) => panic!("sensor.set_config() failed: {error}"),
     };
 
     match sensor.lock().unwrap().set_control(
@@ -83,7 +83,7 @@ fn main() -> std::io::Result<()> {
             | bmp280::Control::NormalMode as u8,
     ) {
         Ok(_) => (),
-        Err(error) => panic!("PANIC! sensor.set_control() failed: {error}"),
+        Err(error) => panic!("sensor.set_control() failed: {error}"),
     };
 
     println!("BMP280 initialized:");
@@ -95,19 +95,19 @@ fn main() -> std::io::Result<()> {
 
     println!("Starting WifiService");
     let wifi_service = match WifiService::new(ssid.unwrap(), psk.unwrap(), |error| {
-        panic!("PANIC! WifiService raised an error. ({error})")
+        panic!("WifiService raised an error. ({error})")
     }) {
         Ok(result) => result,
-        Err(error) => panic!("PANIC! Cannot create WifiService instance: {error}"),
+        Err(error) => panic!("Cannot create WifiService instance: {error}"),
     };
     wifi_service.start();
 
     println!("Starting NetworkService");
     let network_service = match NetworkService::new(port.unwrap(), sensor.clone(), |error| {
-        panic!("PANIC! NetworkService raised an error. ({error})")
+        panic!("NetworkService raised an error. ({error})")
     }) {
         Ok(result) => result,
-        Err(error) => panic!("PANIC! Cannot create NetworkService instance: {error}"),
+        Err(error) => panic!("Cannot create NetworkService instance: {error}"),
     };
     network_service.start();
 
